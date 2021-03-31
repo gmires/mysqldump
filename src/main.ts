@@ -46,6 +46,7 @@ const defaultOptions: Options = {
             },
         },
         data: {
+            useReplace: false,
             format: true,
             verbose: true,
             lockTables: false,
