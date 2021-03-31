@@ -161,6 +161,11 @@ interface TriggerDumpOptions {
 
 interface DataDumpOptions {
     /**
+     * ---
+     * Defaults to false.
+     */
+    useReplace?: boolean;
+    /**
      * True to run a sql formatter over the output, false otherwise.
      * Defaults to true.
      */
