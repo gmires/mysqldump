@@ -11,6 +11,24 @@ interface QueryRes {
     [k: string]: unknown;
 }
 
+function buildReplace(
+    table: Table,
+    values: Array<string>,
+    format: (s: string) => string,
+): string {
+    const sql = format(
+        [
+            `REPLACE INTO \`${table.name}\` (\`${table.columnsOrdered.join(
+                '`,`',
+            )}\`)`,
+            `VALUES ${values.join(',')};`,
+        ].join(' '),
+    );
+
+    // sql-formatter lib doesn't support the X'aaff' or b'01010' literals, and it adds a space in and breaks them
+    // this undoes the wrapping we did to get around the formatting
+    return sql.replace(/NOFORMAT_WRAP\("##(.+?)##"\)/g, '$1');
+}
 function buildInsert(
     table: Table,
     values: Array<string>,
@@ -168,7 +186,10 @@ async function getDataDump(
                     // if we've got a full queue
                     if (rowQueue.length === options.maxRowsPerInsertStatement) {
                         // create and write a fresh statement
-                        const insert = buildInsert(table, rowQueue, format);
+                        const insert = 
+                            options.useReplace ? 
+                                buildReplace(table, rowQueue, format) :
+                                buildInsert(table, rowQueue, format);
                         saveChunk(insert);
                         rowQueue = [];
                     }
@@ -176,7 +197,10 @@ async function getDataDump(
                 query.on('end', () => {
                     // write the remaining rows to disk
                     if (rowQueue.length > 0) {
-                        const insert = buildInsert(table, rowQueue, format);
+                        const insert = 
+                            options.useReplace ? 
+                                buildReplace(table, rowQueue, format) :
+                                buildInsert(table, rowQueue, format);
                         saveChunk(insert);
                         rowQueue = [];
                     }

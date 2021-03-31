@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 /// <reference types="node" />
 
 export interface ConnectionOptions {
@@ -157,8 +158,8 @@ export interface TriggerDumpOptions {
 }
 export interface DataDumpOptions {
 	/**
-	 * True to run a sql formatter over the output, false otherwise.
-	 * Defaults to true.
+	 * ---
+	 * Defaults to false.
 	 */
 	useReplace?: boolean;
 	/**
