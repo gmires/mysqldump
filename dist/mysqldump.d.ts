@@ -160,6 +160,11 @@ export interface DataDumpOptions {
 	 * True to run a sql formatter over the output, false otherwise.
 	 * Defaults to true.
 	 */
+	useReplace?: boolean;
+	/**
+	 * True to run a sql formatter over the output, false otherwise.
+	 * Defaults to true.
+	 */
 	format?: boolean;
 	/**
 	 * Include file headers in output
