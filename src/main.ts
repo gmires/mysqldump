@@ -39,6 +39,7 @@ const defaultOptions: Options = {
                 charset: true,
             },
             view: {
+                exclude: false,
                 createOrReplace: true,
                 algorithm: false,
                 definer: false,

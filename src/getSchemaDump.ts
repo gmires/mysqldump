@@ -60,6 +60,12 @@ async function getSchemaDump(
                 isView: false,
             };
         })
+        .filter(s => {
+            if (options.view.exclude)
+                return (s.isView == false)
+            else
+                return true
+        })
         .map(s => {
             // clean up the generated SQL as per the options
 

@@ -117,6 +117,11 @@ export interface SchemaDumpOptions {
 	};
 	view?: {
 		/**
+		 * Explicitly set to false to not include views in the dump.
+		 * Defaults to including the views.
+		 */
+		exclude?: boolean;
+		/**
 		 * Uses `CREATE OR REPLACE` to define views.
 		 * Defaults to true.
 		 */
