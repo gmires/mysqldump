@@ -93,13 +93,13 @@ function getDropIndex(connection: DB, table: Table): Promise<Array<string>> {
             var indexes_addt = [];
             var indexes_drop = [];
             for (let key in results) {
-                indexes_drop.push(`DROP INDEX \`${key}\` on d_mfarti00;`);
+                indexes_drop.push(`DROP INDEX \`${key}\` on ${table.name};`);
                 indexes_addt.push(`ADD INDEX \`${key}\` (${results[key].map((v: string) => `\`${v}\``).join(',')})`);
             }
 
             if (indexes_addt.length > 0) {
                 r.push(indexes_drop.join('\n '));
-                r.push(`ALTER TABLE \`d_mfarti00\`\n ${indexes_addt.join('\n ')};`);
+                r.push(`ALTER TABLE \`${table.name}\`\n ${indexes_addt.join('\n ')};`);
             }
 
             resolve(r);
@@ -235,14 +235,13 @@ async function getDataDump(
 
                 // stream the data to the file
                 query.on('result', (row: QueryRes) => {
-                    // if dropIndex array[0] != '' write drop
-                    if ((indexArray[0] != '') && (indexArray.length > 0)) {
+                    // build the values list
+                    rowQueue.push(buildInsertValue(row, table));
+
+                    if ((rowQueue.length > 0) && (indexArray.length == 2) && (indexArray[0] != '')) {
                         saveChunk(indexArray[0]);
                         indexArray[0] = '';
                     }
-
-                    // build the values list
-                    rowQueue.push(buildInsertValue(row, table));
 
                     // if we've got a full queue
                     if (rowQueue.length === options.maxRowsPerInsertStatement) {
@@ -267,7 +266,7 @@ async function getDataDump(
                     }
 
                     // if dropIndex array[1] != '' write create
-                    if ((indexArray[1] != '') && (indexArray.length > 0)) {
+                    if ((indexArray[1] != '') && (indexArray[0] == '') && (indexArray.length == 2)) {
                         saveChunk(indexArray[1]);
                         indexArray[1] = '';
                     }
