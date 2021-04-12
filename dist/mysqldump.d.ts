@@ -158,9 +158,14 @@ export interface TriggerDumpOptions {
 }
 export interface DataDumpOptions {
 	/**
-	 * ---
+	 * Drop index no primary/no unique before dump insert
 	 * Defaults to false.
 	 */
+	dropIndex?: boolean;
+	/**
+	* Use REPLACE INTO in data dump exmport
+	* Defaults to false.
+	*/
 	useReplace?: boolean;
 	/**
 	 * True to run a sql formatter over the output, false otherwise.

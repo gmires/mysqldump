@@ -7,8 +7,26 @@ import { ConnectionOptions, DataDumpOptions } from './interfaces/Options';
 import { Table } from './interfaces/Table';
 import { typeCast } from './typeCast';
 
+import { DB } from './DB';
+
 interface QueryRes {
     [k: string]: unknown;
+}
+
+interface ShowIndex {
+    Table: string;
+    Non_unique: number;
+    Key_name: string;
+    Seq_in_index: number;
+    Column_name: string;
+    Collation: string;
+    Cardinality: number;
+    Sub_part?: string;
+    Packed?: string;
+    Null?: string;
+    Index_type: string;
+    Comment: string;
+    Index_comment: string;
 }
 
 function buildReplace(
@@ -59,12 +77,45 @@ function executeSql(connection: mysql.Connection, sql: string): Promise<void> {
     );
 }
 
+function getDropIndex(connection: DB, table: Table): Promise<Array<string>> {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let r = [];
+            let result = await connection.query<ShowIndex>(`SHOW INDEX FROM ${table.name}`);
+            let results = result
+                .filter((item: ShowIndex) => item.Key_name != 'PRIMARY')
+                .filter((item: ShowIndex) => item.Non_unique == 1)
+                .reduce((acc: any, item: ShowIndex) => {
+                    acc[item.Key_name] = [...acc[item.Key_name] || [], item.Column_name];
+                    return acc;
+                }, {});
+
+            var indexes_addt = [];
+            var indexes_drop = [];
+            for (let key in results) {
+                indexes_drop.push(`DROP INDEX \`${key}\` on d_mfarti00;`);
+                indexes_addt.push(`ADD INDEX \`${key}\` (${results[key].map((v: string) => `\`${v}\``).join(',')})`);
+            }
+
+            if (indexes_addt.length > 0) {
+                r.push(indexes_drop.join('\n '));
+                r.push(`ALTER TABLE \`d_mfarti00\`\n ${indexes_addt.join('\n ')};`);
+            }
+
+            resolve(r);
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
 // eslint-disable-next-line complexity
 async function getDataDump(
     connectionOptions: ConnectionOptions,
     options: Required<DataDumpOptions>,
     tables: Array<Table>,
     dumpToFile: string | null,
+    dbconnection?: DB
 ): Promise<Array<Table>> {
     // ensure we have a non-zero max row option
     options.maxRowsPerInsertStatement = Math.max(
@@ -97,9 +148,9 @@ async function getDataDump(
     // open the write stream (if configured to)
     const outFileStream = dumpToFile
         ? fs.createWriteStream(dumpToFile, {
-              flags: 'a', // append to the file
-              encoding: 'utf8',
-          })
+            flags: 'a', // append to the file
+            encoding: 'utf8',
+        })
         : null;
 
     function saveChunk(str: string | Array<string>, inArray = true): void {
@@ -157,13 +208,17 @@ async function getDataDump(
                 // write the table header to the file
                 const header = [
                     '# ------------------------------------------------------------',
-                    `# DATA DUMP FOR TABLE: ${table.name}${
-                        options.lockTables ? ' (locked)' : ''
+                    `# DATA DUMP FOR TABLE: ${table.name}${options.lockTables ? ' (locked)' : ''
                     }`,
                     '# ------------------------------------------------------------',
                     '',
                 ];
                 saveChunk(header);
+            }
+
+            let indexArray: Array<string> = []
+            if (options.dropIndex && dbconnection) {
+                indexArray = await getDropIndex(dbconnection, table);
             }
 
             // eslint-disable-next-line no-await-in-loop
@@ -180,14 +235,20 @@ async function getDataDump(
 
                 // stream the data to the file
                 query.on('result', (row: QueryRes) => {
+                    // if dropIndex array[0] != '' write drop
+                    if ((indexArray[0] != '') && (indexArray.length > 0)) {
+                        saveChunk(indexArray[0]);
+                        indexArray[0] = '';
+                    }
+
                     // build the values list
                     rowQueue.push(buildInsertValue(row, table));
 
                     // if we've got a full queue
                     if (rowQueue.length === options.maxRowsPerInsertStatement) {
                         // create and write a fresh statement
-                        const insert = 
-                            options.useReplace ? 
+                        const insert =
+                            options.useReplace ?
                                 buildReplace(table, rowQueue, format) :
                                 buildInsert(table, rowQueue, format);
                         saveChunk(insert);
@@ -197,14 +258,19 @@ async function getDataDump(
                 query.on('end', () => {
                     // write the remaining rows to disk
                     if (rowQueue.length > 0) {
-                        const insert = 
-                            options.useReplace ? 
+                        const insert =
+                            options.useReplace ?
                                 buildReplace(table, rowQueue, format) :
                                 buildInsert(table, rowQueue, format);
                         saveChunk(insert);
                         rowQueue = [];
                     }
 
+                    // if dropIndex array[1] != '' write create
+                    if ((indexArray[1] != '') && (indexArray.length > 0)) {
+                        saveChunk(indexArray[1]);
+                        indexArray[1] = '';
+                    }
                     resolve();
                 });
                 query.on(

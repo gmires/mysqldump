@@ -46,6 +46,7 @@ const defaultOptions: Options = {
             },
         },
         data: {
+            dropIndex: false,
             useReplace: false,
             format: true,
             verbose: true,
@@ -174,7 +175,7 @@ export default async function main(inputOptions: Options): Promise<DumpReturn> {
         }
 
         // data dump uses its own connection so kill ours
-        await connection.end();
+        //// await connection.end();
 
         // dump data if requested
         if (options.dump.data !== false) {
@@ -185,6 +186,7 @@ export default async function main(inputOptions: Options): Promise<DumpReturn> {
                 options.dump.data,
                 tables,
                 options.dumpToFile,
+                connection
             );
             res.dump.data = res.tables
                 .map(t => t.data)
@@ -192,6 +194,8 @@ export default async function main(inputOptions: Options): Promise<DumpReturn> {
                 .join('\n')
                 .trim();
         }
+
+        await connection.end();
 
         // write the triggers to the file
         if (options.dumpToFile && res.dump.trigger) {

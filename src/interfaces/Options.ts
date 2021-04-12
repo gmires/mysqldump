@@ -34,47 +34,47 @@ interface ConnectionOptions {
      * See: https://nodejs.org/api/tls.html#tls_tls_createsecurecontext_options
      */
     ssl?:
-        | 'Amazon RDS'
-        | null
-        | {
-              /**
-               * Optionally override the trusted CA certificates. Default is to trust the well-known CAs curated by Mozilla.
-               */
-              ca?: string | Buffer;
-              /**
-               * Optional cert chains in PEM format.
-               */
-              cert?: string | Buffer;
-              /**
-               * Optional cipher suite specification, replacing the default.
-               */
-              ciphers?: string;
-              /**
-               * Optional PEM formatted CRLs (Certificate Revocation Lists).
-               */
-              crl?: string | Array<string>;
-              /**
-               * Attempt to use the server's cipher suite preferences instead of the client's.
-               */
-              honorCipherOrder?: boolean;
-              /**
-               * Optional private keys in PEM format.
-               */
-              key?: string | Buffer;
-              /**
-               * Optional shared passphrase used for a single private key and/or a PFX.
-               */
-              passphrase?: string;
-              /**
-               * Optional PFX or PKCS12 encoded private key and certificate chain.
-               */
-              pfx?: string | Buffer;
-              /**
-               * DO NOT USE THIS OPTION UNLESS YOU REALLY KNOW WHAT YOU ARE DOING!!!
-               * Set to false to allow connection to a MySQL server without properly providing the appropraite CA to trust.
-               */
-              rejectUnauthorized?: boolean;
-          };
+    | 'Amazon RDS'
+    | null
+    | {
+        /**
+         * Optionally override the trusted CA certificates. Default is to trust the well-known CAs curated by Mozilla.
+         */
+        ca?: string | Buffer;
+        /**
+         * Optional cert chains in PEM format.
+         */
+        cert?: string | Buffer;
+        /**
+         * Optional cipher suite specification, replacing the default.
+         */
+        ciphers?: string;
+        /**
+         * Optional PEM formatted CRLs (Certificate Revocation Lists).
+         */
+        crl?: string | Array<string>;
+        /**
+         * Attempt to use the server's cipher suite preferences instead of the client's.
+         */
+        honorCipherOrder?: boolean;
+        /**
+         * Optional private keys in PEM format.
+         */
+        key?: string | Buffer;
+        /**
+         * Optional shared passphrase used for a single private key and/or a PFX.
+         */
+        passphrase?: string;
+        /**
+         * Optional PFX or PKCS12 encoded private key and certificate chain.
+         */
+        pfx?: string | Buffer;
+        /**
+         * DO NOT USE THIS OPTION UNLESS YOU REALLY KNOW WHAT YOU ARE DOING!!!
+         * Set to false to allow connection to a MySQL server without properly providing the appropraite CA to trust.
+         */
+        rejectUnauthorized?: boolean;
+    };
 }
 
 interface SchemaDumpOptions {
@@ -161,9 +161,14 @@ interface TriggerDumpOptions {
 
 interface DataDumpOptions {
     /**
-     * ---
+     * Drop index no primary/no unique before dump insert
      * Defaults to false.
      */
+    dropIndex?: boolean;
+    /**
+    * Use REPLACE INTO in data dump exmport 
+    * Defaults to false. 
+    */
     useReplace?: boolean;
     /**
      * True to run a sql formatter over the output, false otherwise.
@@ -269,8 +274,8 @@ type RequiredRecursive<T> = {
         | Array<string>
         | Array<number>
         | Array<boolean>)
-        ? T[TK]
-        : RequiredRecursive<T[TK]>
+    ? T[TK]
+    : RequiredRecursive<T[TK]>
 };
 
 interface CompletedOptions {

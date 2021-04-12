@@ -9,6 +9,7 @@ import { config } from '../testConfig';
             dump: {
                 data: {
                     returnFromFunction: true,
+                    dropIndex: true
                 },
             },
             dumpToFile: `${__dirname}/../launch_dump.sql`,

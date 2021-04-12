@@ -10,10 +10,12 @@ interface ShowCreateView {
     character_set_client: string;
     collation_connection: string;
 }
+
 interface ShowCreateTable {
     Table: string;
     'Create Table': string;
 }
+
 type ShowCreateTableStatementRes = ShowCreateView | ShowCreateTable;
 
 function isCreateView(v: ShowCreateTableStatementRes): v is ShowCreateView {
