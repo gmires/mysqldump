@@ -99,7 +99,7 @@ function getDropIndex(connection: DB, table: Table): Promise<Array<string>> {
 
             if (indexes_addt.length > 0) {
                 r.push(indexes_drop.join('\n '));
-                r.push(`ALTER TABLE \`${table.name}\`\n ${indexes_addt.join('\n ')};`);
+                r.push(`ALTER TABLE \`${table.name}\`\n ${indexes_addt.join(',\n ')};`);
             }
 
             resolve(r);
